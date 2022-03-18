@@ -1,0 +1,259 @@
+<Docker>
+<환경설정>
+- yum install wget -y : 파일 다운 하는 프로그램
+- yum install elinks -y : 메뉴기반의 웹브라우저
+: 마우스가 아닌 메뉴바 형식으로 조작하는 것
+- vi /etc/sysconfig/selinux : selinux기능끄기
+- reboot : selinux기능끈 것 적용하기
+- vi /etc/hostname : 이름바꾸기
+centos1 > master
+centos2 > node1
+centos3 > node2
+centos4 > node3 : 가상머신을 하나 더 만들어야 함
+- vi /etc/hosts : ip 주소에 맞게 이름 다시 바꿔주기
+- master쪽에서 각 node로 파일 복사하기
+scp /etc/hosts node1:/etc/hosts
+scp /etc/hosts node2:/etc/hosts
+scp /etc/hosts node3:/etc/hosts
+- reboot : 적용시키고 로그인 하면 이름이 적용됨
+
+Docker
+
+* 우리가 이용하는 서비스(네이버, 카카오 등)를 구성하는것에는
+많은 것들이 있음.
+-> 문제점 : 여러가지 환경들이 필요. 서버이용률이 낮음. 등
+-> 해결법 : 하나의 물리적인 server에 여러개의 가상머신, OS 운영 (자원의 활용률이 증가)
+-> 문제점
+- 관리해야할 server가 많아짐
+- 물리적인 서버에 비하면 성능이 떨어진다.
+- host가 고장나면 내부의 가상머신이 전부 고장이므로,
+clustering기술(다른컴퓨터들까지 하나로 묶음)이 필요
+-> 가상머신보다 가벼운 Container기술을 이용하는 것이 Docker
+: Linux Kernel을 공유함 - cpu, ram, disk를 덜 사용한다
+Container : 서로의 영역을 침범하지 않는 독립적인 공간제공
+* 장점 
+- application간의 충돌을 방지
+- 자원활용률을 증대
+* VM과 Container 비교
+- 성능 : VM < Container
+ㄴ 가상머신은 Hypervisor(하드웨어와 운영체제 사이)을 거쳐서 작업하기 때문에 
+- 효율성 : VM - 메모리를 확보했기때문에 다른곳에서 사용을 못함
+Container - os커널을 공유하기 때문에 필요한 만큼 효율적으로 사용
+- 신속성 :  사용자 서비스 요청량이 증가 > 기업에서는 VM이나 Container추가
+VM -크기 최소 몇 Gb
+Container - 크기 Mb  - 배포하는데 시간이 적게 걸림
+- 라이센스비용절감 :  VM < Container 
+- 안정성 :  VM > Container 
+: os커널을 공유하기 때문에 하나의 container가 무리하게 자원을 사용하게 될 수도
+ㄴ container에 cpu, memory와 같은 자원할당량을 사전에 지정하여 해결가능
+
+- docker run -it --rm ubuntu : 우분투 맨처음 다운
+- docker run -it --rm alpine
+- docker run -it --rm ubuntu : 1초만에 사용가능
+- docker run -it --rm httpd 
+- docker run -it --rm nginx
+ㄴ 한 포트(80)에 여러개가 동시에 돌고 있음
+: 서로서로 격리가 되어있기 때문에 가능 한 것
+ㄴ docker exec -it 콘테이너id /bin/bash : 확인용
+
+- docker run -it --rm ubuntu
+= docker container run -it --rm ubuntu
+run : 만들고 시작한 것
+- docker create -it --name myalpine alpine
+create : 만들기만 하고 시작x
+- docker ps -a : 모든(생성,실행,중지) 도커를 볼 수 있음
+docker ps : 현재 실행중인 도커만 보기
+- docker exec -it myalpine /bin/sh : 실행중인 것에 접속할 때
+
+<도커 설치 및 설정>
+- 설치 : curl -sSL http://get.docker.com | sh
+- 자동시작 구성여부 확인 : systemctl list-unit-files | grep docker
+- docker 시작 : systemctl start docker
+- 재시작할때 자동으로 docker시작 : systemctl enable docker
+- 실행여부 확인 : systemctl status docker
+<명령어 설명>
+- docker container --name [컨테이너이름] -it(?) alpine(이미지)
+- docker run(실행) -d( 백그라운드 실행) -p(포트포워딩) 80:81 nginx(이미지)
+: 도커호스트 80(내 임의대로 설정)으로 들어오면, 81(이미지가 가지고 있는 포트번호 - 확인해야함)
+포트로 보냄
+이미지 포트번호 확인 : docker history [이미지이름]
+ex) -p 80:8080 pengbai/docker-supermario
+
+* docker images = docker image ls : 일반이미지 목록
+* docker image pull busybox : busybox를 다운받음
+* docker image pull [이미지이름] : 이미지를 다운받음
+= docker pull [이미지이름]
+이름에 대한 정보는 내가 찾아봐야 함.
+docker search : 사용하고자 하는 이미지 검색하기
+docker image pull centos:7
+* docker pull jesuswithme(선생님 id)/myweb(해당id가 만든 이미지)
+: 개인이 올린 이미지를 다운받으려면 id를 적어주어야 함
+id가 없으면 기관에서 만든 것
+* docker container rm mycon(콘테이너이름) : 컨테이너를 지워라
+- window에서 notepad.exe 이것을 실행실행시키면, 이 파일이 
+하드디스크(책장)에 저장되어있는데 메모리(데스크)에 올라온 것
+- 도커에서는 이미지=원본파일.
+다운로드된 이미지를 실행하면 메모리로 띄운게 container
+실행을 해야 container가 되는 것
+< run --rm 으로 시작 : exit하면 자동 삭제 >
+docker run -it --rm centos:latest
+exit
+docker ps - 없음
+docker ps -a - 없음
+
+< run으로 시작 : exit하면 중지된 상태 >
+docker run --name yyy -it centos : 만들고 실행된 상태에서 
+exit -나오면 중지됨 
+(계속 실행된 상태로 빠져나올려면 : ctrl+p + ctrl+q  또는 처음 만들때 -itd로 작성 )
+docker ps : 없음
+docker ps -a : 중지된 상태로 기록
+* docker images = docker image ls : 일반이미지 목록
+* docker image pull busybox : busybox를 다운받음
+* docker image pull [이미지이름] : 이미지를 다운받음
+= docker pull [이미지이름]
+ㄴ 이름에 대한 정보는 내가 찾아봐야 함.
+ㄴ docker search : 사용하고자 하는 이미지 검색하기
+docker image pull centos:7
+* docker pull jesuswithme(선생님 id)/myweb(해당id가 만든 이미지)
+: 개인이 올린 이미지를 다운받으려면 id를 적어주어야 함
+id가 없으면 기관에서 만든 것
+
+< run --rm 으로 시작 : exit하면 자동 삭제 >
+docker run -it --rm centos:latest
+exit
+docker ps - 없음
+docker ps -a - 없음
+
+< run으로 시작 : exit하면 중지된 상태 >
+docker run --name yyy -it centos : 만들고 실행된 상태에서 
+exit -나오면 중지됨 
+(계속 실행된 상태로 빠져나올려면 : ctrl+p + ctrl+q  또는 처음 만들때 -itd로 작성 )
+docker ps : 없음
+docker ps -a : 중지된 상태로 기록
+
+< start로 시작 : exit해도 실행중인 상태 유지 >
+docker start yyy 
+docker exec -it yyy /bin/bash
+exit  
+docker ps : 실행되는 중으로 목록에 있음 - 중지할려면 docker stop
+
+< run + start 경우 >
+docker run -it --name centos100 centos:latest
+exit
+docker ps : 없음
+docker ps -a : 중지된 상태로 있음
+docker start centos100
+mkdir /lab -작업중
+touch /lab/welcome.txt
+ls -l /lab
+exit
+docker ps : 실행중인 상태로 있음
+docker exec -it centos100(컨테이너 이름) /bin/bash
+exit :
+docker ps : 실해중인 상태로 존재
+
+- docker rm $(docker ps -aq) -f : 중지된 컨테이너 한번에 다 삭제
+$ : 하나씩 하나씩 한꺼번에 처리
+- docker exec -it centos100 /bin/bash : 실행중인 도커에 들어감
+-* docker exec 를 사용할 때
+- os작업을 할 때 :  /bin/bash가 default값이기 때문에 안적어도 된다.
+docker exec centos100
+- application작업을 할 때 
+: 어플리케이션은 default값이 /bin/bash가 아니고,
+이런 쉘도 없으므로 -it를 써주어야 함
+docker exec -it mynginx /bin/bash
+
+<내용바꾸기>
+- docker exec -it myweb /bin/bash
+- find / -name "index.html" : 파일 찾기
+- exit
+- curl -o ./index.html http://www.nginx.com
+curl : 웹브라우저에 접속하는 명령어
+옵션으로 (-o 등) 사이트안에있는 파일을 다운로드 할 수 있음
+- cat ./index.html
+- wget -O ./index.html http://www.nginx.com
+wget : 외부사이트에 있는 파일을 다운로드하는 명령어
+
+- docker volume create portainer_date
+- docker run -d -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data portainer/portainer
+
+- docker run --name mysqlcon -d -p 3306:3306 -e 
+MYSQL_ROOT_PASSWORD=password mysql
+e : 환경변수. 루트비번을 지정해 줄 수 있음
+MYSQL_ROOT_PASSWORD 이 부분은 지정되어있으므로 찾아야함.
+- docker exec -it mysqlcon bash 
+- mysql -u root -p
+
+컨테이너 접속방법
+- docker run
+- docker attach [이름,id]
+- docker exec -it [이름] /bin/baxh
+docker exec yeecon touch /sample2.txt
+: 컨테이너에 들어가지않고 작업을 할 수 있음.
+- docker ps -f status=exited : 중지된 컨테이너만 확인
+- it와 itd의 차이
+* docker run -d centos /bin/bash 
+: 실행은 되는데  docker ps 하면 안 보임.
+start 해도 docker ps에서 안보임.
+* docker run -itd centos /bin/bash 
+: 실행되고, docker ps하면 나타남.
+- restart=always 
+: 도커 호스트가 있는데 거기 10개의 컨테이너가 돌고있다. 
+도커 호스트가 꺼지면 10개의 컨테이너도 다 죽음. 
+도커 호스트가 죽었다가 다시 살아날때 실행중지된 컨테이너들을 
+자동으로 실행하게 하는 것.
+
+컨테이너
+- docker run --name mycon1 centos cat /etc/hostname
+: 작업하고 곧장 죽어버림.
+-> os작업 할때는 /bin/bash로 작업하라.
+또는 run /bin/bash로 작업하고 난 다음, exec로 작업하면 살아있음.
+- docker run --name mycon2 centos ping www.google.com  
+들어가지 않고 작업이 가능.  작업이 끝나면 죽음.
+
+이미지 
+- docker history [이미지이름] : 포트번호를 알고 싶을때
+- docker images : 다운로드 한 이미지를 볼 수 있음
+- docker pull [이미지이름] : 다운로드
+
+MySQL
+- docker pull mysql
+- docker run -d --name=test-mysql --env="MYSQL_ROOT_PASSWORD=mypassword" -p 3306:3306 mysql
+- docker logs test-mysql : 백그라운드로 실행되는 정보를 볼 때
+- 클라이언트 설치 - 외부에서 sql작업을 할때 필요함.
+직접 들어가서(exec) 작업하면 필요 없음.
+- mysql -u root -p : 클라이언트 프로그램
+u : user / p : password
+
+*Volume : 컨테이너는 무조건 언제가는 꺼지니 데이터를 지키기위해 
+도커 볼륨을 사용
+ㄴ web server root dir, db 등의 작업은 외부에 저장소이용
+- docker volume create fs
+- docker volume ls
+- docker run -itd --name fs_alpine -v fs:/shared alpine
+ㄴ :/shared : 컨테이너에 있는 것
+ㄴ 뒤에 명령어를 쓰고 싶으면 docker history로 cmd확인
+(/bin/bash) 
+- docker exec -it fs_alpine /bin/sh
+ㄴ alpine은 bash없다
+-- cd /shared
+-- pwd
+-- touch hoho.txt
+-- echo "Due date;" > hoho.txt
+-- cat hoho.txt
+-- exit
+- docker ps : 작동중
+- docker run --name fs-centos7 -itd -v fs:/shared2 centos:7
+- docker exec -it fs_centos7 /bin/bash
+--cd /shared2
+--ls -l : 다른 컨테이너에서 작업한 hoho.txt파일이 있다
+ㄴ 마운트(=연결)시킨 자료보면 컨테이너 dir등 알 수 있음
+다른 사람이 만든 것들을 볼때 유용함
+- docker rm $(docker ps -aq) -f : 컨테이너 모두 삭제
+- docker volume ls :  남아있는 것을 확인
+<다른사람이 작업한 볼륨을 확인하고 이용할 수 있다>
+- docker volume inspect fs
+- ls -l /var/lib/docker/volume/fs/_data : 이전 데이터가 남아있음
+- docker run -itd -v fs:/data busybox : 다시 활용 가능
+ㄴ busybox는 cmd가 [/sh]임
+-docker exec -it [컨테이너 이름/id] /bin/sh
