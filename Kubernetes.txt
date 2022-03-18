@@ -1,0 +1,11 @@
+<Kubernetes>
+* container강점 :  application운영시 VM보다 가볍다.
+application 배포를 민첩하게 (DevOps)
+지속적인 개발과 동합 배포
+운영전반에 걸친 일관성 있은 환경제공
+application중심으로 관리
+resource를 충분하게 활용 : 원하는 만큼 사용 가능
+image를 컴퓨터, cloud,ubuntu등에서 작동 가능
+* container약점 
+: container가 많으면 docker명령어로 일일이 관리가 어려움
+운영자 입장에서는? docker는 업그레이드가 안됨 - 새로 만들어야 함
